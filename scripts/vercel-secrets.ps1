@@ -28,6 +28,20 @@ function New-RandomSecret {
   return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
+# Runs the Vercel CLI and returns { Code, Output }.
+# The CLI prints its banner to stderr; Windows PowerShell 5.1 turns stderr lines into errors,
+# so stop-on-error is switched off here and success is decided by the exit code only.
+function Invoke-VercelCli([string[]]$cliArgs) {
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $output = & vercel @cliArgs 2>&1 | ForEach-Object { "$_" } | Out-String
+    return @{ Code = $LASTEXITCODE; Output = $output }
+  } finally {
+    $ErrorActionPreference = $previous
+  }
+}
+
 function Set-VercelSecret([string]$name, [string]$value, [string]$target) {
   if ([string]::IsNullOrEmpty($value)) {
     Write-Host "  skip    $name [$target] (empty in backend\.env)" -ForegroundColor Yellow
@@ -37,14 +51,17 @@ function Set-VercelSecret([string]$name, [string]$value, [string]$target) {
   if ($target -eq 'production') { $cliArgs += @('-e', 'production') }
   else { $cliArgs += @('-e', 'preview', '--git-branch', 'development') }
 
-  $output = & vercel @cliArgs 2>&1 | Out-String
-  if ($LASTEXITCODE -ne 0) {
+  $result = Invoke-VercelCli $cliArgs
+  if ($result.Code -ne 0) {
     Write-Host "  FAILED  $name [$target]" -ForegroundColor Red
-    Write-Host ($output -replace [regex]::Escape($value), '<hidden>')
+    Write-Host ($result.Output -replace [regex]::Escape($value), '<hidden>')
     exit 1
   }
   Write-Host "  ok      $name [$target]" -ForegroundColor Green
 }
+
+$login = Invoke-VercelCli @('whoami')
+if ($login.Code -ne 0) { throw "Vercel CLI is not logged in. Run: vercel login" }
 
 $copied = 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM', 'SUPERADMIN_EMAIL', 'SUPERADMIN_PASSWORD'
 
