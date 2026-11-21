@@ -168,6 +168,30 @@ Gmail (الأسهل):
 3. شغّل `npm run local` وابدأ بـ "Login as superadmin". التوكن والـ ids بيتحفظوا لوحدهم.
 4. requests الصور (form-data): اختار صورة من Body قبل ما تبعت.
 
+## Deploy (Vercel + GitHub)
+
+Two Vercel projects from this repo, each connected to GitHub (every push deploys automatically):
+
+| | `main` (production) | `development` |
+|---|---|---|
+| Dashboard (`frontend/`) | https://nakra-dashboard.vercel.app | https://nakra-dashboard-dev.vercel.app |
+| API (`backend/`) | https://nakra-api.vercel.app | https://nakra-api-dev.vercel.app |
+
+Workflow: work on `development` → push → test on the `-dev` links → merge into `main` → production.
+
+- **Storage on Vercel:** the disk is not persistent, so the API uses a **private Vercel Blob** store (`nakra-data`)
+  for the JSON data and the images (`backend/src/storage/`). Each environment has its own folder
+  (`dev/`, `production/`): development never touches production data. Locally it still uses plain files.
+- **Images** are served by the API at `/uploads/...` (the store is private).
+- **Superadmin:** created automatically on the first request from `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD`.
+- **Environment variables:** URLs and `APP_ENV` are set per environment in each Vercel project.
+  Secrets (JWT, SMTP, superadmin) are pushed from your local `backend/.env` with:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts\vercel-secrets.ps1
+  ```
+  then redeploy (any push does it).
+- **Frontend** reads the API URL from `VITE_API_URL` (set in the Vercel project per environment).
+
 ## API
 
 كل الـ endpoints تحت `/api`. المحمي منها محتاج `Authorization: Bearer <token>`.
