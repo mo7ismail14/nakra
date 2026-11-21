@@ -11,7 +11,9 @@ Dashboard لإدارة المطاعم والكافيهات: منيو، QR codes�
 Nakra/
 ├── backend/
 │   ├── src/
-│   │   ├── server.js / app.js     # تشغيل السيرفر وتجميع الـ app
+│   │   ├── startServer.js / createApp.js  # تشغيل السيرفر محلياً / تجميع الـ app
+│   │   ├── storage/               # local files أو Vercel Blob
+│   ├── index.js                   # نقطة الدخول على Vercel
 │   │   ├── config/                # قراءة .env
 │   │   ├── db/jsonStore.js        # قراءة/كتابة ملفات JSON بأمان (queue + atomic write)
 │   │   ├── data/                  # users.json, restaurants.json, tokens.json
