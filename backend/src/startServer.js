@@ -1,6 +1,6 @@
 // Long-running server: `npm run local` / `npm run dev` / `npm start` (and any host with a real disk).
-// On Vercel, index.js (project root) is used instead.
-import { createApp } from './app.js';
+// On Vercel, index.js (project root) is the only entry point (keep files named app.js / server.js out of src/).
+import { createApp } from './createApp.js';
 import { config } from './config/index.js';
 import { bootstrap } from './services/setup.service.js';
 import { storage } from './storage/index.js';
