@@ -1,0 +1,1643 @@
+{
+  "info": {
+    "name": "Nakra API",
+    "description": "Nakra restaurants/menu API.\n\nHow to use:\n1. Import this collection + \"Nakra - Local\" environment, select the environment (top right).\n2. In the environment, set superadminPassword (same as SUPERADMIN_PASSWORD in backend/.env).\n3. Start the backend: npm run local\n4. Run \"Login as superadmin\" first. Every request that creates something saves its id (restaurantId, categoryId, ...) automatically.\n\nTokens: {{token}} = superadmin, {{adminToken}} = new admin, {{ownerToken}} = restaurant owner.\nImage requests (form-data): pick a file in the Body tab before sending.\nYou can also run the whole collection in order with the Runner (image requests are skipped automatically if no file is chosen).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "ownerToken",
+      "value": ""
+    },
+    {
+      "key": "adminId",
+      "value": ""
+    },
+    {
+      "key": "adminSetupToken",
+      "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "restaurantId",
+      "value": ""
+    },
+    {
+      "key": "restaurantSlug",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "category2Id",
+      "value": ""
+    },
+    {
+      "key": "itemId",
+      "value": ""
+    },
+    {
+      "key": "item2Id",
+      "value": ""
+    },
+    {
+      "key": "categoryIdsJson",
+      "value": ""
+    },
+    {
+      "key": "itemIdsJson",
+      "value": ""
+    },
+    {
+      "key": "inviteToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health",
+      "description": "Is the server up? No login needed.",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "description": "Login, current user, forgot / reset password.",
+      "item": [
+        {
+          "name": "Login as superadmin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Saves the token in {{token}}. All staff requests use it automatically.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{superadminEmail}}\",\n  \"password\": \"{{superadminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('token', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me (current user)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login with wrong password (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{superadminEmail}}\",\n  \"password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/forgot-password",
+            "description": "Sends a reset link by email (or prints it in the backend terminal if SMTP is not set).\nCopy the last part of the link (after /reset-password/) into the collection variable resetToken, then use the two requests below.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{superadminEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset password: check link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/reset-password/{{resetToken}}",
+            "description": "Needs {{resetToken}} from the forgot-password email/console.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('resetToken')) { console.warn('Skipped: set the resetToken variable first'); pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset password: set new password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/reset-password",
+            "description": "Sets a new password and logs out all other sessions of that user. Returns a new token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"NewPassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('resetToken')) { console.warn('Skipped: set the resetToken variable first'); pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Admins (superadmin only)",
+      "description": "Uses {{token}} (superadmin).",
+      "item": [
+        {
+          "name": "List admins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/admins"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admins",
+            "description": "Creates the admin and emails him a \"set your password\" link (also returned as setupLink).\nSaves adminId and adminSetupToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('adminId', j.user.id);",
+                  "pm.collectionVariables.set('adminSetupToken', j.setupLink.split('/').pop());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: check setup link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/reset-password/{{adminSetupToken}}",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: set password from setup link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/reset-password",
+            "description": "What the new admin does from the email link. Saves {{adminToken}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{adminSetupToken}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: tries to list admins (expect 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/admins",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resend admin setup link",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/admins/{{adminId}}/resend-setup"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Restaurants",
+      "description": "Uses {{token}} (staff). Owners can use the same requests on their own restaurant.",
+      "item": [
+        {
+          "name": "Create restaurant (JSON, no logo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants",
+            "description": "Required: name, ownerName, and email or phone.\nOptional: slug (menu link part), instapayLink, vodafoneCashNumber, vodafoneCashInstapayLink.\nSaves restaurantId and restaurantSlug.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cafe Nile\",\n  \"ownerName\": \"Ahmed Ali\",\n  \"email\": \"{{ownerEmail}}\",\n  \"phone\": \"01012345678\",\n  \"instapayLink\": \"https://ipn.eg/S/cafenile/instapay/abc123\",\n  \"vodafoneCashNumber\": \"01012345678\",\n  \"vodafoneCashInstapayLink\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('restaurantId', j.restaurant.id);",
+                  "pm.collectionVariables.set('restaurantSlug', j.restaurant.slug);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create restaurant with logo (form-data)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants",
+            "description": "Pick a logo file in Body > form-data first. Does not change the saved restaurantId.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": [],
+                  "disabled": false,
+                  "description": "Choose an image (JPG / PNG / WEBP, max 3 MB)"
+                },
+                {
+                  "key": "name",
+                  "value": "Pizza Corner",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "ownerName",
+                  "value": "Mona Hassan",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "email",
+                  "value": "",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "phone",
+                  "value": "01112345678",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "slug",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true,
+                  "description": "Optional custom link, e.g. pizza-corner"
+                },
+                {
+                  "key": "instapayLink",
+                  "value": "",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "vodafoneCashNumber",
+                  "value": "",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "vodafoneCashInstapayLink",
+                  "value": "",
+                  "type": "text",
+                  "disabled": false
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List restaurants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get restaurant (details + menu)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "description": "Also saves the current category / item order (used by the reorder requests)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "const cats = j.restaurant.categories;",
+                  "pm.collectionVariables.set('categoryIdsJson', JSON.stringify(cats.map(c => c.id)));",
+                  "const cat = cats.find(c => c.id === pm.collectionVariables.get('categoryId'));",
+                  "if (cat) pm.collectionVariables.set('itemIdsJson', JSON.stringify(cat.items.map(i => i.id)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update restaurant (JSON)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "description": "Send only the fields you want to change. Send \"\" to clear an optional field.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cafe Nile - Zamalek\",\n  \"vodafoneCashInstapayLink\": \"https://ipn.eg/S/vfcash/instapay/xyz\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update logo (form-data)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "description": "Pick a logo file in Body > form-data. The old logo file is deleted.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": [],
+                  "disabled": false,
+                  "description": "Choose an image (JPG / PNG / WEBP, max 3 MB)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove logo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"removeLogo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "QR codes (menu, InstaPay, Vodafone Cash)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/qr-codes",
+            "description": "Each QR is { value, dataUrl } or null. Paste a dataUrl in the browser address bar to see the image."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Menu (categories & items)",
+      "description": "Uses {{token}}. Same requests work for the owner with {{ownerToken}}.",
+      "item": [
+        {
+          "name": "Add category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hot Drinks\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('categoryId', j.category.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add second category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Desserts\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('category2Id', j.category.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rename category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hot Drinks ☕\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add item (JSON, no image)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Espresso\",\n  \"description\": \"Single shot\",\n  \"price\": 35,\n  \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('itemId', j.item.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add item with image (form-data)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}/items",
+            "description": "Pick an image file first. Saves item2Id.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "disabled": false,
+                  "description": "Choose an image (JPG / PNG / WEBP, max 3 MB)"
+                },
+                {
+                  "key": "name",
+                  "value": "Latte",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "description",
+                  "value": "With fresh milk",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "price",
+                  "value": "55",
+                  "type": "text",
+                  "disabled": false
+                },
+                {
+                  "key": "isAvailable",
+                  "value": "true",
+                  "type": "text",
+                  "disabled": false
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('item2Id', j.item.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update item (price / availability)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}/items/{{itemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 40,\n  \"isAvailable\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update item image (form-data)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}/items/{{itemId}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "disabled": false,
+                  "description": "Choose an image (JPG / PNG / WEBP, max 3 MB)"
+                },
+                {
+                  "key": "removeImage",
+                  "value": "true",
+                  "type": "text",
+                  "disabled": true,
+                  "description": "Enable instead of a file to remove the image"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get restaurant (refresh order ids)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "description": "Saves the ids in REVERSED order so the two reorder requests below visibly change something."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "const cats = j.restaurant.categories;",
+                  "pm.collectionVariables.set('categoryIdsJson', JSON.stringify(cats.map(c => c.id).reverse()));",
+                  "const cat = cats.find(c => c.id === pm.collectionVariables.get('categoryId'));",
+                  "if (cat) pm.collectionVariables.set('itemIdsJson', JSON.stringify(cat.items.map(i => i.id).reverse()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reorder categories",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/order",
+            "description": "ids must contain every category id exactly once, in the new order.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": {{categoryIdsJson}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reorder items",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}/items/order",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": {{itemIdsJson}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Public menu (customers)",
+      "description": "No login. This is what the menu QR code opens.",
+      "item": [
+        {
+          "name": "Public menu by slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/public/menu/{{restaurantSlug}}",
+            "description": "Categories with no items are hidden. Owner name / email / phone are not included.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Owner invitation",
+      "description": "Staff sends an invitation; the owner accepts it from the email link.",
+      "item": [
+        {
+          "name": "Send invitation to owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/invitation",
+            "description": "Sends to the restaurant email. To use another email: { \"email\": \"someone@example.com\" }.\nThe link is also returned (share it on WhatsApp if needed). Saves inviteToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('inviteToken', j.link.split('/').pop());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: open invitation link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/invitations/{{inviteToken}}",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: accept invitation (set password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/invitations/{{inviteToken}}/accept",
+            "description": "Creates the owner account and logs him in. Saves {{ownerToken}}.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('ownerToken', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ownerEmail}}\",\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('ownerToken', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: my restaurants (only his)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);",
+                  "const j = pm.response.json();",
+                  "pm.test('only one restaurant', () => pm.expect(j.restaurants.length).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: edit his restaurant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"instapayLink\": \"https://ipn.eg/S/owner/instapay/new\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: add item to his menu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{category2Id}}/items",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kunafa\",\n  \"price\": 70\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner: delete restaurant (expect 403)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke pending invitation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/invitation",
+            "description": "Cancels an invitation that was not accepted yet."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Delete / cleanup",
+      "description": "Deletes what the collection created. Run last.",
+      "item": [
+        {
+          "name": "Delete item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{categoryId}}/items/{{itemId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete category (and its items)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/categories/{{category2Id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove owner account",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}/owner",
+            "description": "The owner loses access; a new invitation can be sent afterwards."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete restaurant",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
+            "description": "Also deletes its owner account, pending links and all its images."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete admin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/admins/{{adminId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('success (2xx)', () => pm.response.to.be.success);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const body = pm.request.body;",
+          "if (body && body.mode === 'formdata') {",
+          "  const fileField = body.formdata.find(f => f.type === 'file' && !f.disabled);",
+          "  const hasFile = fileField && fileField.src && (Array.isArray(fileField.src) ? fileField.src.length : true);",
+          "  if (fileField && !hasFile) {",
+          "    console.warn(`Skipped \"${pm.info.requestName}\": choose a file in Body > form-data`);",
+          "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

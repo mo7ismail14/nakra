@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.vercel/
+
+# Secrets: never commit
+.env
+.env.*
+
+# Local data (users with password hashes, restaurants) and uploaded images
+backend/src/data/*.json
+backend/uploads/**
+!backend/uploads/**/.gitkeep
+
+# Editor / tool folders
+.claude/
+.vscode/
+.idea/
+*.log
