@@ -29,7 +29,7 @@ export default function Login() {
       <Input label="الإيميل" type="email" autoComplete="email" ltr autoFocus {...form.field('email')} />
       <Input label="كلمة المرور" type="password" autoComplete="current-password" {...form.field('password')} />
       <div className="text-end">
-        <Link to="/forgot-password" className="text-sm text-brand-700 hover:underline">
+        <Link to="/forgot-password" className="inline-block py-1.5 text-sm text-brand-700 hover:underline">
           نسيت كلمة المرور؟
         </Link>
       </div>

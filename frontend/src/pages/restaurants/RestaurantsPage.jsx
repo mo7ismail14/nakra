@@ -55,7 +55,7 @@ export default function RestaurantsPage() {
                 <Input aria-label="بحث" placeholder="دوّر بالاسم أو الإيميل أو الموبايل" className="[&_input]:ps-9" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               {visible.length ? (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {visible.map((r) => (
                     <RestaurantCard key={r.id} restaurant={r} onDelete={onDelete} deleting={deletingId === r.id} />
                   ))}

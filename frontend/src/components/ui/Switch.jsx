@@ -13,7 +13,8 @@ export default function Switch({ value, onChange, label, description, disabled, 
         disabled={disabled}
         onClick={() => onChange(!value)}
         className={cn(
-          'relative inline-flex shrink-0 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700',
+          // after: invisible larger tap area (at least ~40px) around the small switch
+          "relative inline-flex shrink-0 rounded-full transition-colors after:absolute after:-inset-2.5 after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700",
           small ? 'h-5 w-9' : 'h-6 w-11',
           value ? 'bg-brand-600' : 'bg-slate-300',
         )}

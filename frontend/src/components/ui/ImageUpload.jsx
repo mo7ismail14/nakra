@@ -56,11 +56,11 @@ export default function ImageUpload({ label, currentUrl, onChange, error, shape 
           )}
         </button>
         <div className="flex flex-col items-start gap-1">
-          <button type="button" onClick={() => input.current?.click()} className="text-sm font-medium text-brand-700 hover:underline">
+          <button type="button" onClick={() => input.current?.click()} className="py-1.5 text-sm font-medium text-brand-700 hover:underline">
             {preview ? 'تغيير الصورة' : 'رفع صورة'}
           </button>
           {preview && (
-            <button type="button" onClick={remove} className="inline-flex items-center gap-1 text-sm text-red-600 hover:underline">
+            <button type="button" onClick={remove} className="inline-flex items-center gap-1 py-1.5 text-sm text-red-600 hover:underline">
               <Trash2 className="size-3.5" />
               إزالة
             </button>

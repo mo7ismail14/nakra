@@ -12,11 +12,11 @@ export default function SharedLinkResult({ email, emailSent, link }) {
     <div className="space-y-3">
       {emailSent ? (
         <Alert variant="success">
-          اتبعت إيميل لـ <span dir="ltr">{email}</span>. ممكن كمان تبعت اللينك ده بنفسك:
+          اتبعت إيميل لـ <span dir="ltr" className="break-all">{email}</span>. ممكن كمان تبعت اللينك ده بنفسك:
         </Alert>
       ) : (
         <Alert variant="warning">
-          الإيميل ما اتبعتش (اتأكد من إعدادات SMTP). ابعت اللينك ده لـ <span dir="ltr">{email}</span> بنفسك:
+          الإيميل ما اتبعتش (اتأكد من إعدادات SMTP). ابعت اللينك ده لـ <span dir="ltr" className="break-all">{email}</span> بنفسك:
         </Alert>
       )}
       <LinkBox url={link} />

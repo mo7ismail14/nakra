@@ -61,7 +61,7 @@ export default function ItemFormModal({ restaurantId, categoryId, item, onClose,
     >
       <div className="space-y-4">
         <ImageUpload label="صورة الصنف" currentUrl={item?.imageUrl} onChange={(file, removed) => setImage({ file, removed })} />
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Input label="اسم الصنف" autoFocus className="sm:col-span-2" {...form.field('name')} />
           <Input label="السعر (جنيه)" type="number" inputMode="decimal" min="0" step="0.01" ltr {...form.field('price')} />
         </div>

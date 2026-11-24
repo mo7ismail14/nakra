@@ -106,7 +106,7 @@ export default function MenuEditor({ restaurantId, categories, setCategories }) 
     <div className="space-y-4">
       {categories.length ? (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-500">
               {categories.length} قسم · {categories.reduce((n, c) => n + c.items.length, 0)} صنف. رتّب بالأسهم، والترتيب ده هو اللي بيظهر للزبون.
             </p>

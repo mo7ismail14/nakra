@@ -47,7 +47,7 @@ export default function RestaurantForm({ restaurant, onSaved }) {
   return (
     <form onSubmit={form.handleSubmit} noValidate className="space-y-6">
       <Card title="بيانات المطعم">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <ImageUpload
             label="لوجو المطعم"
             currentUrl={restaurant?.logoUrl}
@@ -63,7 +63,7 @@ export default function RestaurantForm({ restaurant, onSaved }) {
       </Card>
 
       <Card title="وسائل الدفع" description="بتظهر للزبون في صفحة المنيو، وبيتعملها QR code.">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Input label="لينك إنستاباي" ltr placeholder="https://ipn.eg/S/..." className="sm:col-span-2" {...form.field('instapayLink')} />
           <Input label="رقم فودافون كاش" type="tel" ltr placeholder="010xxxxxxxx" {...form.field('vodafoneCashNumber')} />
           <Input

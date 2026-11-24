@@ -78,9 +78,9 @@ export default function InvitationPanel({ restaurant, onChanged }) {
       <div className="max-w-xl space-y-4">
         {pendingInvitation && !result && (
           <Alert variant="info" title="فيه دعوة مستنية">
-            <span className="inline-flex items-center gap-1">
-              <Clock className="size-4" />
-              اتبعتت لـ <span dir="ltr">{pendingInvitation.email}</span> وصالحة لحد {formatDateTime(pendingInvitation.expiresAt)}.
+            <span className="flex items-start gap-1">
+              <Clock className="mt-1 size-4 shrink-0" />
+              <span>اتبعتت لـ <span dir="ltr" className="break-all">{pendingInvitation.email}</span> وصالحة لحد {formatDateTime(pendingInvitation.expiresAt)}.</span>
             </span>
           </Alert>
         )}

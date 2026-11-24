@@ -8,17 +8,22 @@ export default function CategorySection({ category, index, count, actions }) {
   const { items } = category;
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <header className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/60 px-3 py-2 sm:px-4">
-        <MoveButtons index={index} count={count} onMove={(step) => actions.moveCategory(index, step)} />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold text-slate-900">{category.name}</h3>
+      {/* Phone: name on its own line, actions on the next one. sm and up: one line. */}
+      <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-100 bg-slate-50/60 px-3 py-2.5 sm:flex-nowrap sm:px-4">
+        <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
+          <h3 className="break-words font-semibold text-slate-900">{category.name}</h3>
           <p className="text-xs text-slate-500">{items.length} صنف</p>
         </div>
-        <Button variant="ghost" size="icon" icon={Pencil} onClick={() => actions.editCategory(category)} aria-label="تعديل القسم" title="تعديل القسم" />
-        <Button variant="ghost" size="icon" icon={Trash2} className="hover:text-red-600" onClick={() => actions.deleteCategory(category)} aria-label="مسح القسم" title="مسح القسم" />
-        <Button size="sm" icon={Plus} onClick={() => actions.addItem(category)}>
-          صنف
-        </Button>
+        <div className="flex w-full items-center justify-between gap-1 sm:w-auto">
+          <MoveButtons index={index} count={count} onMove={(step) => actions.moveCategory(index, step)} />
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" icon={Pencil} onClick={() => actions.editCategory(category)} aria-label="تعديل القسم" title="تعديل القسم" />
+            <Button variant="ghost" size="icon" icon={Trash2} className="hover:text-red-600" onClick={() => actions.deleteCategory(category)} aria-label="مسح القسم" title="مسح القسم" />
+            <Button size="sm" icon={Plus} onClick={() => actions.addItem(category)}>
+              صنف
+            </Button>
+          </div>
+        </div>
       </header>
 
       {items.length ? (

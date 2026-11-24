@@ -7,7 +7,7 @@ import RestaurantLogo from './RestaurantLogo.jsx';
 export default function RestaurantCard({ restaurant, onDelete, deleting }) {
   const r = restaurant;
   return (
-    <article className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-300 hover:shadow-md">
+    <article className="group relative flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-300 hover:shadow-md">
       <div className="flex items-start gap-4">
         <RestaurantLogo name={r.name} logoUrl={r.logoUrl} />
         <div className="min-w-0 flex-1">
@@ -35,7 +35,7 @@ export default function RestaurantCard({ restaurant, onDelete, deleting }) {
         {r.email && (
           <div className="flex items-center gap-2">
             <Mail className="size-4 text-slate-400" />
-            <span dir="ltr" className="truncate">{r.email}</span>
+            <span dir="ltr" className="min-w-0 truncate">{r.email}</span>
           </div>
         )}
         {r.phone && (

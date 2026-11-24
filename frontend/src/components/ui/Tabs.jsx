@@ -10,8 +10,8 @@ export default function Tabs({ tabs, value, onChange }) {
   }, [value]);
 
   return (
-    <div className="mb-6 overflow-x-auto border-b border-slate-200">
-      <nav className="-mb-px flex gap-1" role="tablist">
+    <div className="mb-6 overflow-x-auto overflow-y-hidden border-b border-slate-200 [scrollbar-width:none]">
+      <nav className="flex gap-1" role="tablist">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}

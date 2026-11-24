@@ -2,8 +2,9 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useId, useState } from 'react';
 import { cn } from '../../utils/helpers.js';
 
+// text-base (16px) on phones and tablets: iOS Safari zooms into any field with a smaller font.
 const base =
-  'block w-full rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 disabled:bg-slate-50';
+  'block w-full rounded-lg border bg-white px-3 text-base lg:text-sm text-slate-900 placeholder:text-slate-400 transition focus:outline-none focus:ring-2 disabled:bg-slate-50';
 const normal = 'border-slate-300 focus:border-brand-600 focus:ring-brand-600/20';
 const invalid = 'border-red-400 focus:border-red-500 focus:ring-red-500/20';
 
@@ -35,7 +36,7 @@ export default function Input({ label, hint, error, required, multiline, ltr, cl
   const id = useId();
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
-  const inputClass = cn(base, error ? invalid : normal, multiline ? 'py-2' : 'h-10', isPassword && 'pe-10');
+  const inputClass = cn(base, error ? invalid : normal, multiline ? 'py-2' : 'h-11 lg:h-10', isPassword && 'pe-10');
   const common = {
     id,
     dir: ltr || isPassword ? 'ltr' : undefined,

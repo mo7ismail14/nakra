@@ -6,7 +6,7 @@ export default function PageHeader({ title, description, actions, backTo, backLa
   return (
     <div className="mb-6 space-y-3">
       {backTo && (
-        <Link to={backTo} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
+        <Link to={backTo} className="-my-1.5 inline-flex items-center gap-1 py-1.5 text-sm text-slate-500 hover:text-slate-800">
           <ArrowRight className="size-4" />
           {backLabel}
         </Link>
@@ -15,7 +15,7 @@ export default function PageHeader({ title, description, actions, backTo, backLa
         <div className="flex min-w-0 items-center gap-4">
           {media}
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-bold text-slate-900">{title}</h1>
+            <h1 className="line-clamp-2 break-words text-xl font-bold text-slate-900 sm:truncate sm:text-2xl">{title}</h1>
             {description && <div className="mt-1 text-sm text-slate-500">{description}</div>}
           </div>
         </div>
