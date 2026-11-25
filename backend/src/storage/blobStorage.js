@@ -13,6 +13,10 @@ async function readText(stream) {
   return new Response(stream).text();
 }
 
+// get() returns a weak ETag (W/"...") when the response is compressed (files over ~1KB),
+// but put({ ifMatch }) only accepts the strong form. Always keep the strong one.
+const strongEtag = (etag) => (etag ? etag.replace(/^W\//, '') : etag);
+
 const isConflict = (err) =>
   err instanceof BlobPreconditionFailedError || /already exists/i.test(err?.message || '');
 
@@ -31,7 +35,7 @@ export const blobStorage = {
     if (!res) return { data: [], version: null };
     if (res.statusCode === 304) return { unchanged: true };
     const raw = await readText(res.stream);
-    return { data: raw.trim() ? JSON.parse(raw) : [], version: res.blob.etag };
+    return { data: raw.trim() ? JSON.parse(raw) : [], version: strongEtag(res.blob.etag) };
   },
 
   async writeCollection(name, data, expectedVersion) {
@@ -44,7 +48,7 @@ export const blobStorage = {
         // Optimistic locking: fail if someone else wrote the file since we read it.
         ...(expectedVersion ? { ifMatch: expectedVersion } : { allowOverwrite: false }),
       });
-      return result.etag;
+      return strongEtag(result.etag);
     } catch (err) {
       if (isConflict(err)) throw new ConflictError(name);
       throw err;

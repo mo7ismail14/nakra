@@ -56,6 +56,7 @@ export function mutate(name, fn) {
         return structuredClone(result);
       } catch (err) {
         if (!(err instanceof ConflictError) || attempt >= MAX_ATTEMPTS) throw err;
+        cache.delete(name); // next attempt reads the file fresh, without trusting the cached version
       }
     }
   };
